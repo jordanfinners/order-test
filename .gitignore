@@ -1,0 +1,18 @@
+# Binaries - i.e. all files without extension
+*
+!*/
+!**.*
+
+# VSCode
+.vscode
+
+# Test binary, built with `go test -c`
+*.test
+
+#Go stuff
+c.out
+coverage.html
+.bin/
+
+# OSX
+.DS_STORE
