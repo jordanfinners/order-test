@@ -1,0 +1,40 @@
+name: deploy
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '1.13'
+
+    - name: Test & Lint
+      run: |
+            go test -race -cover ./...
+            go vet ./...
+            test -z $(gofmt -s -l -w .)
+      working-directory: ./api
+      
+    - name: Authenticate GCP
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
+
+    - name: Deploy orders
+      run: |
+            gcloud functions deploy orders --entry-point HandleOrders --runtime go113 --trigger-http
+      working-directory: ./api
+    
+    - name: Deploy website
+      run: |
+            gcloud functions deploy website --entry-point HandleWebsite --runtime go113 --trigger-http --set-env-vars WEBSITE_FILE_PATH=./static/index.html,ORDERS_API=https://us-central1-ordertest.cloudfunctions.net/orders
+      working-directory: ./api
