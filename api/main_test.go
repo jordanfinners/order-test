@@ -64,17 +64,6 @@ func TestHandleOrders(t *testing.T) {
 	}
 }
 
-func TestHandleOrdersInvalidForm(t *testing.T) {
-	badForm := "items="
-	req := httptest.NewRequest("POST", "/", strings.NewReader(badForm))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	rr := httptest.NewRecorder()
-	HandleOrders(rr, req)
-
-	require.Equal(t, http.StatusBadRequest, rr.Result().StatusCode)
-}
-
 func TestHandleOrdersInvalidItemsOrdered(t *testing.T) {
 	badForm := "items=Seven"
 	req := httptest.NewRequest("POST", "/", strings.NewReader(badForm))
@@ -98,7 +87,7 @@ var handleWebsiteTests = map[string]handleWebsiteTest{
 		method:         "GET",
 		body:           "",
 		expectedStatus: http.StatusOK,
-		expectedBody:   "<!doctype html>\n<html lang=\"en\">\n\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"generator\" content=\"Jordans Order Test\">\n    <meta name=\"viewport\" content=\"width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes\">\n\n    <title>Jordans Order Test</title>\n    <meta name=\"description\" content=\"Jordans Order Test\">\n    <meta name=\"author\" content=\"https://github.com/jordanfinners\">\n\n    <meta property=\"og:title\" content=\"Jordans Order Test\">\n    <meta property=\"og:description\" content=\"Jordans Order Test\">\n    <meta property=\"og:image\"\n        content=\"https://avatars2.githubusercontent.com/u/17813098?s=460&u=f8f61170c39933eff8aaf52f87bf6939ecdee7a6&v=4\">\n</head>\n\n<body>\n    <form name=\"order\" method=\"post\" action=\"http://localhost:8080/orders\">\n        <label>How many items do you wish to order?\n            <input type=\"number\" name=\"items\" placeholder=\"e.g. 501\" min=\"1\" required>\n        </label>\n        <button type=\"submit\">Submit Order</button>\n        <button type=\"reset\">Start Over</button>\n    </form>\n</body>\n\n</html>\n",
+		expectedBody:   "\n<!doctype html>\n<html lang=\"en\">\n\n<head>\n\t<meta charset=\"utf-8\">\n\t<meta name=\"generator\" content=\"Jordans Order Test\">\n\t<meta name=\"viewport\" content=\"width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes\">\n\n\t<title>Jordans Order Test</title>\n\t<meta name=\"description\" content=\"Jordans Order Test\">\n\t<meta name=\"author\" content=\"https://github.com/jordanfinners\">\n\n\t<meta property=\"og:title\" content=\"Jordans Order Test\">\n\t<meta property=\"og:description\" content=\"Jordans Order Test\">\n\t<meta property=\"og:image\"\n\t\tcontent=\"https://avatars2.githubusercontent.com/u/17813098?s=460&u=f8f61170c39933eff8aaf52f87bf6939ecdee7a6&v=4\">\n</head>\n\n<body>\n\t<form name=\"order\" method=\"post\" action=\"http://localhost:8080/orders\">\n\t\t<label>How many items do you wish to order?\n\t\t\t<input type=\"number\" name=\"items\" placeholder=\"e.g. 501\" min=\"1\" required>\n\t\t</label>\n\t\t<button type=\"submit\">Submit Order</button>\n\t\t<button type=\"reset\">Start Over</button>\n\t</form>\n</body>\n\n</html>",
 	},
 	"Put Request": {
 		method:         "PUT",

@@ -70,16 +70,13 @@ func HandleWebsite(w http.ResponseWriter, r *http.Request) {
 
 func serveSite(w http.ResponseWriter, r *http.Request) {
 
-	var websiteFilePath string
-	websiteFilePath = os.Getenv("WEBSITE_FILE_PATH")
-
 	var ordersAPI string
 	ordersAPI = os.Getenv("ORDERS_API")
 
-	template, err := template.ParseFiles(websiteFilePath)
+	template, err := template.New("website").Parse(getSiteTemplate())
 	if err != nil {
-		log.Printf("Error parsing index file: %v", err)
-		http.Error(w, "Error parsing index file", http.StatusInternalServerError)
+		log.Printf("Error parsing index page: %v", err)
+		http.Error(w, "Error parsing index page", http.StatusInternalServerError)
 		return
 	}
 
@@ -93,8 +90,8 @@ func serveSite(w http.ResponseWriter, r *http.Request) {
 
 	err = template.Execute(w, data)
 	if err != nil {
-		log.Printf("Error templating index file: %v", err)
-		http.Error(w, "Error templating index file", http.StatusInternalServerError)
+		log.Printf("Error templating index page: %v", err)
+		http.Error(w, "Error templating index page", http.StatusInternalServerError)
 		return
 	}
 

@@ -14,12 +14,7 @@ func main() {
 
 	port := "8080"
 
-	err := os.Setenv("WEBSITE_FILE_PATH", "../static/index.html")
-	if err != nil {
-		log.Printf("Failed to set the WEBSITE_FILE_PATH: %v", err)
-	}
-
-	err = os.Setenv("ORDERS_API", "http://localhost:8080/orders")
+	err := os.Setenv("ORDERS_API", "http://localhost:8080/orders")
 	if err != nil {
 		log.Printf("Failed to set the ORDERS_API: %v", err)
 	}

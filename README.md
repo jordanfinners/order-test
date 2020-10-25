@@ -15,6 +15,8 @@ Requires Go 1.13 or greater. This can be downloaded [here](https://golang.org/do
 
 If I were to keep developing the API my next features I would think about adding to store historic orders and provide a `GET orders` and `GET orders/:id` endpoints to list the historic orders.
 
+I would also look at securing the endpoints and website more, with security headers, authentication on the endpoint and more protection around what values can be submitted.
+
 ### Endpoints
 
 There are two endpoints exposed by this API.
@@ -53,6 +55,8 @@ Deployed version is accessible at `https://us-central1-ordertest.cloudfunctions.
 
 It responds with a simple HTML page, where orders can be submitted. It templates in the appropriate url of the orders endpoint.
 
+This has been inlined simply to make the deploy as a Cloud Function simpler, if I were to continue with this I would extract the website to generated and served statically from Blob Storage/S3 with a CDN in front for cost/performance benefits.
+
 ### Running Locally
 
 Running the functions locally takes advantage of [Googles Functions Framework](https://github.com/GoogleCloudPlatform/functions-framework-go). This will serve up both website and orders endpoints on http://localhost:8080
@@ -64,9 +68,8 @@ cd api/local/
 go run local.go
 ```
 
-
 ### Testing
-To run the tests, issue the following command(s):
+To run the tests, issue the following command(s) in the api directory:
 
 ```bash
 go fmt ./...
@@ -74,7 +77,7 @@ go vet ./...
 go test -cover -race ./...
 ```
 
-To generate a code coverage report issue the following commands:
+To generate a code coverage report issue the following commands in the api directory:
 
 ```bash
 go test -cover -coverprofile=c.out ./...

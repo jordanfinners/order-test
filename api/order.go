@@ -15,7 +15,7 @@ type Order struct {
 // It does this by starting with the largest pack size and working down
 // If the items ordered after adding a pack size is still greater than that pack size, then it starts again, using the largest pack sizes possible to fill an order
 // If the order is smaller than the smallest pack size available, then use the smallest pack size as the packs cannot be broken up
-// Once calculated the packs required to fulfil the order, check if we can use a single pack to fulfil the order instead of multiple as this is more efficient for shipping
+// Once calculated the packs required to fulfil the order, check if we can use a single pack to fulfil the order instead of multiple as this is more efficient for shipping. This has been kept simple for now but in future should be expanded to check all combinations of packs to see if the order can be simplified.
 func calculateOrder(items int, packs []Pack) Order {
 	var fulfilment []Pack
 	var quantityRemaining = items

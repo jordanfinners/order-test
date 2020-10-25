@@ -36,5 +36,5 @@ jobs:
     
     - name: Deploy website
       run: |
-            gcloud functions deploy website --entry-point HandleWebsite --runtime go113 --trigger-http --set-env-vars WEBSITE_FILE_PATH=./static/index.html,ORDERS_API=https://us-central1-ordertest.cloudfunctions.net/orders
+            gcloud functions deploy website --entry-point HandleWebsite --runtime go113 --trigger-http --set-env-vars ORDERS_API=https://us-central1-ordertest.cloudfunctions.net/orders
       working-directory: ./api
