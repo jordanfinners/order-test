@@ -55,3 +55,11 @@ func TestCalculatingOrders(t *testing.T) {
 		})
 	}
 }
+
+func TestCalculatingOrdersWith93EdgeCase(t *testing.T) {
+	packs := []model.Pack{{Quantity: 90}, {Quantity: 33}}
+	computedOrder := CalculateOrder(93, packs)
+
+	require.Equal(t, 93, computedOrder.Items)
+	require.ElementsMatch(t, []model.Pack{{Quantity: 90}, {Quantity: 33}}, computedOrder.Packs)
+}
