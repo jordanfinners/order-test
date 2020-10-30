@@ -30,6 +30,10 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func createAzureFunctionRequestBody(method, body string) string {
+	return fmt.Sprintf(`{"Data":{"req":{"Url":"http://localhost:7071/api/orders","Method":"%s","Query":"{}","Headers":{"Content-Type":["application/json"]},"Params":{},"Body":"%s"}},"Metadata":{}}`, method, body)
+}
+
 type handleOrdersTest struct {
 	method         string
 	body           string
@@ -38,15 +42,9 @@ type handleOrdersTest struct {
 }
 
 var handleOrdersTests = map[string]handleOrdersTest{
-	"Get Request": {
-		method:         "GET",
-		body:           "",
-		expectedStatus: http.StatusOK,
-		expectedBody:   "",
-	},
 	"Put Request": {
 		method:         "PUT",
-		body:           `{"items":501}`,
+		body:           `{\"items\":501}`,
 		expectedStatus: http.StatusMethodNotAllowed,
 		expectedBody:   "",
 	},
@@ -56,20 +54,14 @@ var handleOrdersTests = map[string]handleOrdersTest{
 		expectedStatus: http.StatusMethodNotAllowed,
 		expectedBody:   "",
 	},
-	"Post Request": {
-		method:         "POST",
-		body:           `{\"items\":501}`,
-		expectedStatus: http.StatusCreated,
-		expectedBody:   `{"items":501,"packs":[{"quantity":500},{"quantity":250}]}`,
-	},
 }
 
-func TestHandleOrdersRequest(t *testing.T) {
+func TestHandleNotAllowedMethodOrdersRequests(t *testing.T) {
 	for name, test := range handleOrdersTests {
 		t.Run(name, func(t *testing.T) {
-			functionHostRequest := fmt.Sprintf(`{"Data":{"req":{"Url":"http://localhost:7071/api/orders","Method":"%v","Query":"{}","Headers":{"Content-Type":["application/json"]},"Params":{},"Body":"%v"}},"Metadata":{}}`, test.method, test.body)
 
-			req := httptest.NewRequest(test.method, "/", strings.NewReader(functionHostRequest))
+			functionHostRequest := createAzureFunctionRequestBody(test.method, test.body)
+			req := httptest.NewRequest("POST", "/", strings.NewReader(functionHostRequest))
 			req.Header.Add("Content-Type", "application/json")
 
 			rr := httptest.NewRecorder()
@@ -80,13 +72,55 @@ func TestHandleOrdersRequest(t *testing.T) {
 			var body InvokeResponse
 			err := json.Unmarshal(rr.Body.Bytes(), &body)
 			require.NoError(t, err)
-
-			output := body.Outputs["res"].(map[string]interface{})
-			responseBody := output["body"].(string)
-
-			if test.expectedBody != "" {
-				require.Equal(t, test.expectedBody, responseBody)
-			}
 		})
 	}
+}
+
+func TestHandlePOSTOrdersRequest(t *testing.T) {
+	functionHostRequest := createAzureFunctionRequestBody("POST", `{\"items\":501}`)
+	req := httptest.NewRequest("POST", "/", strings.NewReader(functionHostRequest))
+	req.Header.Add("Content-Type", "application/json")
+
+	rr := httptest.NewRecorder()
+	HandleOrdersRequest(rr, req)
+
+	require.Equal(t, 201, rr.Result().StatusCode)
+
+	var body InvokeResponse
+	err := json.Unmarshal(rr.Body.Bytes(), &body)
+	require.NoError(t, err)
+
+	output := body.Outputs["res"].(map[string]interface{})
+	responseBody := output["body"].(string)
+
+	var orderDoc model.OrderDocument
+	err = json.Unmarshal([]byte(responseBody), &orderDoc)
+	require.NoError(t, err)
+
+	require.Equal(t, 501, orderDoc.Items)
+
+	expectedPacks := []model.Pack{{Quantity: 500}, {Quantity: 250}}
+	require.Equal(t, expectedPacks, orderDoc.Packs)
+}
+
+func TestHandleGETOrdersRequest(t *testing.T) {
+	functionHostRequest := createAzureFunctionRequestBody("GET", "")
+	req := httptest.NewRequest("POST", "/", strings.NewReader(functionHostRequest))
+	req.Header.Add("Content-Type", "application/json")
+
+	rr := httptest.NewRecorder()
+	HandleOrdersRequest(rr, req)
+
+	require.Equal(t, 200, rr.Result().StatusCode)
+
+	var body InvokeResponse
+	err := json.Unmarshal(rr.Body.Bytes(), &body)
+	require.NoError(t, err)
+
+	output := body.Outputs["res"].(map[string]interface{})
+	responseBody := output["body"].(string)
+
+	var orderDocs []model.OrderDocument
+	err = json.Unmarshal([]byte(responseBody), &orderDocs)
+	require.NoError(t, err)
 }

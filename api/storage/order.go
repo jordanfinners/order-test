@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 
 	"jordanfinners/api/model"
@@ -12,13 +13,13 @@ import (
 const ordersCollectionName string = "orders"
 
 // GetOrders retrieves all orders from collection
-func (c Client) GetOrders(ctx context.Context) ([]model.Order, error) {
+func (c Client) GetOrders(ctx context.Context) ([]model.OrderDocument, error) {
 	cursor, err := c.db.Collection(ordersCollectionName).Find(ctx, bson.D{})
 	if err != nil {
 		log.Printf("Failed to load document cursor %v", err)
 		return nil, err
 	}
-	var orders []model.Order
+	var orders []model.OrderDocument
 	err = cursor.All(ctx, &orders)
 	if err != nil {
 		log.Printf("Failed to load documents to orders %v", err)
@@ -28,11 +29,16 @@ func (c Client) GetOrders(ctx context.Context) ([]model.Order, error) {
 }
 
 // SaveOrder saves an order to the collection
-func (c Client) SaveOrder(ctx context.Context, order model.Order) error {
-	_, err := c.db.Collection(ordersCollectionName).InsertOne(ctx, order)
-	if err != nil {
-		log.Printf("Failed to save pack %v", err)
-		return err
+func (c Client) SaveOrder(ctx context.Context, order model.Order) (model.OrderDocument, error) {
+	document := model.OrderDocument{
+		ID:    uuid.New(),
+		Items: order.Items,
+		Packs: order.Packs,
 	}
-	return nil
+	_, err := c.db.Collection(ordersCollectionName).InsertOne(ctx, document)
+	if err != nil {
+		log.Printf("Failed to save order %v", err)
+		return model.OrderDocument{}, err
+	}
+	return document, nil
 }

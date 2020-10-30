@@ -6,21 +6,22 @@ import (
 	"log"
 	"net/http"
 
+	"jordanfinners/api/model"
 	"jordanfinners/api/orders"
 	"jordanfinners/api/storage"
 )
 
 // PostOrders handles POST requests to /orders
-func PostOrders(request Request) Response {
+func PostOrders(request model.Request) model.Response {
 	var client storage.Client = storage.NewClient()
-	log.Printf(request.Body)
+
 	var body struct {
 		Items int `json:"items"`
 	}
 	err := json.Unmarshal([]byte(request.Body), &body)
 	if err != nil {
 		log.Printf("Failed unmarshal invoke request body data: %v", err)
-		return Response{
+		return model.Response{
 			Status: http.StatusBadRequest,
 			Body:   "",
 		}
@@ -28,7 +29,7 @@ func PostOrders(request Request) Response {
 
 	if body.Items < 1 {
 		log.Printf("Too few items requested: %v", body.Items)
-		return Response{
+		return model.Response{
 			Status: http.StatusBadRequest,
 			Body:   "",
 		}
@@ -37,7 +38,7 @@ func PostOrders(request Request) Response {
 	packs, err := client.GetPacks(context.Background())
 	if err != nil {
 		log.Printf("Error loading packs: %v", err)
-		return Response{
+		return model.Response{
 			Status: http.StatusInternalServerError,
 			Body:   "",
 		}
@@ -45,7 +46,7 @@ func PostOrders(request Request) Response {
 
 	if len(packs) == 0 {
 		log.Printf("No packs to use")
-		return Response{
+		return model.Response{
 			Status: http.StatusGone,
 			Body:   "",
 		}
@@ -53,29 +54,38 @@ func PostOrders(request Request) Response {
 
 	order := orders.CalculateOrder(body.Items, packs)
 
-	response, err := json.Marshal(order)
+	document, err := client.SaveOrder(context.Background(), order)
 	if err != nil {
-		log.Printf("Error serialising json response: %v", err)
-		return Response{
+		log.Printf("Error saving order: %v", err)
+		return model.Response{
 			Status: http.StatusInternalServerError,
 			Body:   "",
 		}
 	}
 
-	return Response{
+	response, err := json.Marshal(document)
+	if err != nil {
+		log.Printf("Error serialising json response: %v", err)
+		return model.Response{
+			Status: http.StatusInternalServerError,
+			Body:   "",
+		}
+	}
+
+	return model.Response{
 		Status: http.StatusCreated,
 		Body:   string(response),
 	}
 }
 
 // GetOrders handles GET requests to /orders
-func GetOrders(request Request) Response {
+func GetOrders(request model.Request) model.Response {
 	var client storage.Client = storage.NewClient()
 
 	orders, err := client.GetOrders(context.Background())
 	if err != nil {
 		log.Printf("Error loading orders: %v", err)
-		return Response{
+		return model.Response{
 			Status: http.StatusInternalServerError,
 			Body:   "",
 		}
@@ -84,13 +94,13 @@ func GetOrders(request Request) Response {
 	response, err := json.Marshal(orders)
 	if err != nil {
 		log.Printf("Error serialising json response: %v", err)
-		return Response{
+		return model.Response{
 			Status: http.StatusInternalServerError,
 			Body:   "",
 		}
 	}
 
-	return Response{
+	return model.Response{
 		Status: http.StatusOK,
 		Body:   string(response),
 	}

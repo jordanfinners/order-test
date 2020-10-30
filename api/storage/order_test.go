@@ -27,12 +27,17 @@ func TestSavingOrder(t *testing.T) {
 			{Quantity: 500},
 		},
 	}
-	client.SaveOrder(context.TODO(), order)
+	document, err := client.SaveOrder(context.TODO(), order)
+	require.NoError(t, err)
+
+	require.Equal(t, document.Items, order.Items)
+	require.Equal(t, document.Packs, order.Packs)
+
 	orders, err := client.GetOrders(context.TODO())
 
 	require.NoError(t, err)
 	require.Len(t, orders, 1)
-	require.Equal(t, []model.Order{order}, orders)
+	require.Equal(t, []model.OrderDocument{document}, orders)
 	tearDownOrders()
 }
 
@@ -55,10 +60,11 @@ func TestGettingOrders(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Len(t, orders, 2)
-	expected := []model.Order{
-		order,
-		order2,
-	}
-	require.Equal(t, expected, orders)
+
+	require.Equal(t, order.Items, orders[0].Items)
+	require.Equal(t, order.Packs, orders[0].Packs)
+	require.Equal(t, order2.Items, orders[1].Items)
+	require.Equal(t, order2.Packs, orders[1].Packs)
+
 	tearDownOrders()
 }
