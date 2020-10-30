@@ -2,6 +2,7 @@ package orders
 
 import (
 	"jordanfinners/api/model"
+	"sort"
 )
 
 // CalculateOrder calculates the packs required to fulfil the ordered items
@@ -14,6 +15,11 @@ func CalculateOrder(items int, packs []model.Pack) model.Order {
 	var quantityRemaining = items
 	for quantityRemaining > 0 {
 		for i, pack := range packs {
+			if quantityRemaining == pack.Quantity {
+				fulfilment = append(fulfilment, pack)
+				quantityRemaining = 0
+				break
+			}
 			if quantityRemaining < 0 {
 				break
 			}
@@ -32,18 +38,52 @@ func CalculateOrder(items int, packs []model.Pack) model.Order {
 		}
 	}
 
-	sum := 0
-	for _, pack := range fulfilment {
-		sum += pack.Quantity
-	}
-	for _, pack := range packs {
-		if sum == pack.Quantity {
-			fulfilment = []model.Pack{pack}
+	// we can't combine the largest packs down further for lets keep all them to the side
+	maxPack := packs[0]
+	positionLesserPacks := len(fulfilment)
+	for i, pack := range fulfilment {
+		if pack.Quantity != maxPack.Quantity {
+			positionLesserPacks = i
+			break
 		}
 	}
+	combinedPacks := fulfilment[:positionLesserPacks]
+
+	// grab all the smaller packs to start combining
+	lesserPacks := fulfilment[positionLesserPacks:]
+	sort.SliceStable(lesserPacks, func(i, j int) bool {
+		return packs[i].Quantity < packs[j].Quantity
+	})
+
+	for i := 0; len(lesserPacks) > i; i++ {
+		for {
+			fulfilmentPack := lesserPacks[i]
+			nextIndex := i + 1
+
+			var sum int
+			if i != len(lesserPacks)-1 {
+				sum = fulfilmentPack.Quantity + lesserPacks[nextIndex].Quantity
+
+				isModified := false
+				for _, pack := range packs {
+					if sum == pack.Quantity {
+						lesserPacks[nextIndex] = pack
+						lesserPacks = lesserPacks[nextIndex:]
+						isModified = true
+					}
+				}
+				if !isModified {
+					break
+				}
+			} else {
+				break
+			}
+		}
+	}
+	combinedPacks = append(combinedPacks, lesserPacks...)
 
 	return model.Order{
 		Items: items,
-		Packs: fulfilment,
+		Packs: combinedPacks,
 	}
 }

@@ -100,7 +100,7 @@ func TestHandlePOSTOrdersRequest(t *testing.T) {
 	require.Equal(t, 501, orderDoc.Items)
 
 	expectedPacks := []model.Pack{{Quantity: 500}, {Quantity: 250}}
-	require.Equal(t, expectedPacks, orderDoc.Packs)
+	require.ElementsMatch(t, expectedPacks, orderDoc.Packs)
 }
 
 func TestHandleGETOrdersRequest(t *testing.T) {

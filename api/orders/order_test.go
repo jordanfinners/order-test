@@ -33,6 +33,14 @@ var calculateOrderTests = map[string]calculateOrderTest{
 		items:         12001,
 		expectedPacks: []model.Pack{{Quantity: 5000}, {Quantity: 5000}, {Quantity: 2000}, {Quantity: 250}},
 	},
+	"10900": {
+		items:         10900,
+		expectedPacks: []model.Pack{{Quantity: 5000}, {Quantity: 5000}, {Quantity: 1000}},
+	},
+	"90909": {
+		items:         90909,
+		expectedPacks: []model.Pack{{Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 5000}, {Quantity: 1000}},
+	},
 }
 
 func TestCalculatingOrders(t *testing.T) {
@@ -43,7 +51,7 @@ func TestCalculatingOrders(t *testing.T) {
 			computedOrder := CalculateOrder(test.items, packs)
 
 			require.Equal(t, test.items, computedOrder.Items)
-			require.Equal(t, test.expectedPacks, computedOrder.Packs)
+			require.ElementsMatch(t, test.expectedPacks, computedOrder.Packs)
 		})
 	}
 }
