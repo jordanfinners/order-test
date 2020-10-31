@@ -6,9 +6,8 @@ import (
 
 // Request is a inbound http style request for a handler
 type Request struct {
-	Method      string
-	Body        string
-	QueryParams string
+	Method string
+	Body   string
 }
 
 // Response is a outbound http style response for a handler

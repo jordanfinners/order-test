@@ -36,15 +36,10 @@ func handleInvokeRequest(r *http.Request) model.Request {
 	if reqData["Body"] != nil {
 		body = reqData["Body"].(string)
 	}
-	queryParams := ""
-	if reqData["Query"] != nil {
-		queryParams = reqData["Query"].(string)
-	}
 
 	return model.Request{
-		Method:      method,
-		Body:        body,
-		QueryParams: queryParams,
+		Method: method,
+		Body:   body,
 	}
 }
 

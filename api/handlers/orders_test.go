@@ -37,8 +37,7 @@ func TestHandleGetOrders(t *testing.T) {
 	}
 	testClient.SaveOrder(context.TODO(), order)
 	request := model.Request{
-		Body:        "",
-		QueryParams: "",
+		Body: "",
 	}
 	response := GetOrders(request)
 	require.Equal(t, http.StatusOK, response.Status)
@@ -53,8 +52,7 @@ func TestHandleGetOrders(t *testing.T) {
 
 func TestHandlePostOrders(t *testing.T) {
 	request := model.Request{
-		Body:        `{"items":250}`,
-		QueryParams: "",
+		Body: `{"items":250}`,
 	}
 	response := PostOrders(request)
 	require.Equal(t, http.StatusCreated, response.Status)
@@ -71,8 +69,7 @@ func TestHandlePostOrders(t *testing.T) {
 
 func TestHandlePostOrdersInvalidItemsOrdered(t *testing.T) {
 	request := model.Request{
-		Body:        `{"items":Seven}`,
-		QueryParams: "",
+		Body: `{"items":Seven}`,
 	}
 	response := PostOrders(request)
 	require.Equal(t, http.StatusBadRequest, response.Status)
@@ -80,8 +77,7 @@ func TestHandlePostOrdersInvalidItemsOrdered(t *testing.T) {
 
 func TestHandlePostOrdersZeroItemsOrdered(t *testing.T) {
 	request := model.Request{
-		Body:        `{"items":0}`,
-		QueryParams: "",
+		Body: `{"items":0}`,
 	}
 	response := PostOrders(request)
 	require.Equal(t, http.StatusBadRequest, response.Status)
