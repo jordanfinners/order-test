@@ -20,10 +20,10 @@ func StartTestDB() Client {
 	}
 
 	hostBinding := nat.PortBinding{
-		HostIP:   "0.0.0.0",
+		HostIP:   "127.0.0.1",
 		HostPort: "27017",
 	}
-	containerPort, err := nat.NewPort("tcp", "80")
+	containerPort, err := nat.NewPort("tcp", "27017")
 	if err != nil {
 		log.Printf("TestDB: Error creating docker port %v", err)
 	}
@@ -40,7 +40,7 @@ func StartTestDB() Client {
 		},
 		&container.HostConfig{
 			PortBindings: portBinding,
-		}, nil, "db")
+		}, nil, "")
 	if err != nil {
 		log.Printf("TestDB: Error creating docker for mongodb %v", err)
 	}
@@ -50,7 +50,7 @@ func StartTestDB() Client {
 		log.Printf("TestDB: Error starting docker for mongodb %v", err)
 	}
 
-	os.Setenv("DATABASE_CONNECTION_STRING", "mongodb://admin:password@localhost:27017/")
+	os.Setenv("DATABASE_CONNECTION_STRING", "mongodb://admin:password@127.0.0.1:27017/")
 
 	databaseName := uuid.New().String()
 	os.Setenv("DATABASE_NAME", databaseName)

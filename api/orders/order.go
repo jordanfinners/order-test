@@ -2,6 +2,7 @@ package orders
 
 import (
 	"jordanfinners/api/model"
+	"math"
 	"sort"
 )
 
@@ -13,16 +14,41 @@ import (
 func CalculateOrder(items int, packs []model.Pack) model.Order {
 	var fulfilment []model.Pack
 	var quantityRemaining = items
+	exactPacks := false
+
+	for _, pack := range packs {
+		// if the packs equal just use it and break out
+		if quantityRemaining == pack.Quantity {
+			fulfilment = append(fulfilment, pack)
+			quantityRemaining = 0
+			exactPacks = true
+			break
+		}
+		// if you can make up the pack with exact multiples add those and escape
+		if math.Remainder(float64(quantityRemaining), float64(pack.Quantity)) == 0.0 {
+			packsToAdd := quantityRemaining / pack.Quantity
+			for j := 1; j <= packsToAdd; j++ {
+				fulfilment = append(fulfilment, pack)
+			}
+			quantityRemaining = 0
+			exactPacks = true
+			break
+		}
+	}
+
+	if exactPacks {
+		return model.Order{
+			Items: items,
+			Packs: fulfilment,
+		}
+	}
+
 	for quantityRemaining > 0 {
 		for i, pack := range packs {
-			if quantityRemaining == pack.Quantity {
-				fulfilment = append(fulfilment, pack)
-				quantityRemaining = 0
-				break
-			}
 			if quantityRemaining < 0 {
 				break
 			}
+			// otherwise build up if packs can fulfil it
 			if quantityRemaining >= pack.Quantity {
 				fulfilment = append(fulfilment, pack)
 				quantityRemaining = quantityRemaining - pack.Quantity
@@ -30,6 +56,7 @@ func CalculateOrder(items int, packs []model.Pack) model.Order {
 					break
 				}
 			}
+			// if there is a small amount remaining, less than the smallest pack and were at the smallest pack just use that
 			if quantityRemaining < pack.Quantity && quantityRemaining > 0 && i == len(packs)-1 {
 				fulfilment = append(fulfilment, pack)
 				quantityRemaining = quantityRemaining - pack.Quantity
