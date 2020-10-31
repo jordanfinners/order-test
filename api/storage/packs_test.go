@@ -10,27 +10,27 @@ import (
 	"jordanfinners/api/model"
 )
 
-var client Client
+var testClient Client
 
 func TestMain(m *testing.M) {
-	client = StartTestDB()
+	testClient = StartTestDB()
 	os.Exit(m.Run())
 }
 
 func tearDownPacks() {
-	client.db.Collection(packsCollectionName).Drop(context.Background())
+	testClient.db.Collection(packsCollectionName).Drop(context.Background())
 }
 
 func TestGettingEmptyPacks(t *testing.T) {
-	packs, err := client.GetPacks(context.TODO())
+	packs, err := testClient.GetPacks(context.TODO())
 
 	require.NoError(t, err)
 	require.Len(t, packs, 0)
 }
 
 func TestGettingPacks(t *testing.T) {
-	client.SavePack(context.TODO(), model.Pack{Quantity: 1000})
-	packs, err := client.GetPacks(context.TODO())
+	testClient.SavePack(context.TODO(), model.Pack{Quantity: 1000})
+	packs, err := testClient.GetPacks(context.TODO())
 
 	require.NoError(t, err)
 	require.Len(t, packs, 1)
@@ -42,9 +42,9 @@ func TestGettingPacks(t *testing.T) {
 }
 
 func TestGettingPacksSortsDescending(t *testing.T) {
-	client.SavePack(context.TODO(), model.Pack{Quantity: 1000})
-	client.SavePack(context.TODO(), model.Pack{Quantity: 2000})
-	packs, err := client.GetPacks(context.TODO())
+	testClient.SavePack(context.TODO(), model.Pack{Quantity: 1000})
+	testClient.SavePack(context.TODO(), model.Pack{Quantity: 2000})
+	packs, err := testClient.GetPacks(context.TODO())
 
 	require.NoError(t, err)
 	require.Len(t, packs, 2)

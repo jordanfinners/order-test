@@ -10,11 +10,11 @@ import (
 )
 
 func tearDownOrders() {
-	client.db.Collection(ordersCollectionName).Drop(context.Background())
+	testClient.db.Collection(ordersCollectionName).Drop(context.Background())
 }
 
 func TestGettingEmptyOrders(t *testing.T) {
-	packs, err := client.GetOrders(context.TODO())
+	packs, err := testClient.GetOrders(context.TODO())
 
 	require.NoError(t, err)
 	require.Len(t, packs, 0)
@@ -27,13 +27,13 @@ func TestSavingOrder(t *testing.T) {
 			{Quantity: 500},
 		},
 	}
-	document, err := client.SaveOrder(context.TODO(), order)
+	document, err := testClient.SaveOrder(context.TODO(), order)
 	require.NoError(t, err)
 
 	require.Equal(t, document.Items, order.Items)
 	require.Equal(t, document.Packs, order.Packs)
 
-	orders, err := client.GetOrders(context.TODO())
+	orders, err := testClient.GetOrders(context.TODO())
 
 	require.NoError(t, err)
 	require.Len(t, orders, 1)
@@ -54,9 +54,9 @@ func TestGettingOrders(t *testing.T) {
 			{Quantity: 251},
 		},
 	}
-	client.SaveOrder(context.TODO(), order)
-	client.SaveOrder(context.TODO(), order2)
-	orders, err := client.GetOrders(context.TODO())
+	testClient.SaveOrder(context.TODO(), order)
+	testClient.SaveOrder(context.TODO(), order2)
+	orders, err := testClient.GetOrders(context.TODO())
 
 	require.NoError(t, err)
 	require.Len(t, orders, 2)
