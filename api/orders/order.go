@@ -2,47 +2,68 @@ package orders
 
 import (
 	"jordanfinners/api/model"
+	"log"
 	"math"
 	"sort"
 )
 
-// CalculateOrder calculates the packs required to fulfil the ordered items
-// It does this by starting with the largest pack size and working down
-// If the items ordered after adding a pack size is still greater than that pack size, then it starts again, using the largest pack sizes possible to fill an order
-// If the order is smaller than the smallest pack size available, then use the smallest pack size as the packs cannot be broken up
-// Once calculated the packs required to fulfil the order, check if we can use a single pack to fulfil the order instead of multiple as this is more efficient for shipping. This has been kept simple for now but in future should be expanded to check all combinations of packs to see if the order can be simplified.
-func CalculateOrder(items int, packs []model.Pack) model.Order {
+// exactPackMatching calculates if a pack exactly matches the ordered items, either with one pack or a multiple
+func exactPackMatching(items int, packs []model.Pack) (bool, []model.Pack) {
 	var fulfilment []model.Pack
-	var quantityRemaining = items
-	exactPacks := false
+	isExactPacks := false
 
 	for _, pack := range packs {
 		// if the packs equal just use it and break out
-		if quantityRemaining == pack.Quantity {
+		if items == pack.Quantity {
 			fulfilment = append(fulfilment, pack)
-			quantityRemaining = 0
-			exactPacks = true
+			isExactPacks = true
 			break
 		}
 		// if you can make up the pack with exact multiples add those and escape
-		if math.Remainder(float64(quantityRemaining), float64(pack.Quantity)) == 0.0 {
-			packsToAdd := quantityRemaining / pack.Quantity
+		if math.Remainder(float64(items), float64(pack.Quantity)) == 0.0 {
+			packsToAdd := items / pack.Quantity
 			for j := 1; j <= packsToAdd; j++ {
 				fulfilment = append(fulfilment, pack)
 			}
-			quantityRemaining = 0
-			exactPacks = true
+			isExactPacks = true
 			break
 		}
 	}
+	return isExactPacks, fulfilment
+}
 
-	if exactPacks {
-		return model.Order{
-			Items: items,
-			Packs: fulfilment,
+// multiplesPackMatching calculates if the ordered items can be made up of multiples of a pack
+// with less remainder than the smallest pack size, which is the most efficient packs
+func multiplesPackMatching(items int, packs []model.Pack) (bool, []model.Pack) {
+	var fulfilment []model.Pack
+	isExactMultiplePacks := false
+
+	minPack := packs[len(packs)-1]
+
+	for _, pack := range packs {
+
+		itemsOrdered := float64(items)
+		quantity := float64(pack.Quantity)
+		packsIntoItems := math.Ceil(itemsOrdered / quantity)
+		// if the left over quantity after adding all the packs is less than the smallest pack size
+		// use that as there is less waste
+		log.Printf("packsIntoItems %v left over %v, min %v", packsIntoItems, (packsIntoItems*quantity)-itemsOrdered, float64(minPack.Quantity))
+		if (packsIntoItems*quantity)-itemsOrdered < float64(minPack.Quantity) {
+			for j := 1; j <= int(packsIntoItems); j++ {
+				fulfilment = append(fulfilment, pack)
+			}
+			isExactMultiplePacks = true
+			break
 		}
 	}
+	return isExactMultiplePacks, fulfilment
+}
 
+// sizePackMatching calculates how we can make up the ordered items with packs of various sizes
+func sizePackMatching(items int, packs []model.Pack) []model.Pack {
+	var fulfilment []model.Pack
+
+	quantityRemaining := items
 	for quantityRemaining > 0 {
 		for i, pack := range packs {
 			if quantityRemaining < 0 {
@@ -64,9 +85,15 @@ func CalculateOrder(items int, packs []model.Pack) model.Order {
 			}
 		}
 	}
+	return fulfilment
+}
+
+// combinePacks calculates if we can combine packs to make the dispatched fulfilments more efficient by combinding together packs into larger packs
+func combinePacks(fulfilment []model.Pack, packs []model.Pack) []model.Pack {
+
+	maxPack := packs[0]
 
 	// we can't combine the largest packs down further for lets keep all them to the side
-	maxPack := packs[0]
 	positionLesserPacks := len(fulfilment)
 	for i, pack := range fulfilment {
 		if pack.Quantity != maxPack.Quantity {
@@ -79,9 +106,8 @@ func CalculateOrder(items int, packs []model.Pack) model.Order {
 	// grab all the smaller packs to start combining
 	lesserPacks := fulfilment[positionLesserPacks:]
 	sort.SliceStable(lesserPacks, func(i, j int) bool {
-		return packs[i].Quantity < packs[j].Quantity
+		return lesserPacks[i].Quantity < lesserPacks[j].Quantity
 	})
-
 	for i := 0; len(lesserPacks) > i; i++ {
 		for {
 			fulfilmentPack := lesserPacks[i]
@@ -108,6 +134,29 @@ func CalculateOrder(items int, packs []model.Pack) model.Order {
 		}
 	}
 	combinedPacks = append(combinedPacks, lesserPacks...)
+	return combinedPacks
+}
+
+// CalculateOrder calculates the packs required to fulfil the ordered items
+func CalculateOrder(items int, packs []model.Pack) model.Order {
+
+	isExactPacks, fulfilment := exactPackMatching(items, packs)
+
+	if isExactPacks {
+		return model.Order{
+			Items: items,
+			Packs: fulfilment,
+		}
+	}
+
+	isExactMultiplePacks, fulfilment := multiplesPackMatching(items, packs)
+	log.Printf("isExactMultiplePacks %v", isExactMultiplePacks)
+	if !isExactMultiplePacks {
+		fulfilment = sizePackMatching(items, packs)
+	}
+	log.Printf("ful %v", fulfilment)
+
+	combinedPacks := combinePacks(fulfilment, packs)
 
 	return model.Order{
 		Items: items,

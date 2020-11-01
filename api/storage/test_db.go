@@ -40,15 +40,12 @@ func StartTestDB() Client {
 		},
 		&container.HostConfig{
 			PortBindings: portBinding,
-		}, nil, "")
+		}, nil, "mongo")
 	if err != nil {
 		log.Printf("TestDB: Error creating docker for mongodb %v", err)
 	}
 
-	err = cli.ContainerStart(context.Background(), cont.ID, types.ContainerStartOptions{})
-	if err != nil {
-		log.Printf("TestDB: Error starting docker for mongodb %v", err)
-	}
+	cli.ContainerStart(context.Background(), cont.ID, types.ContainerStartOptions{})
 
 	os.Setenv("DATABASE_CONNECTION_STRING", "mongodb://admin:password@127.0.0.1:27017/")
 
